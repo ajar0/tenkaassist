@@ -1,6 +1,10 @@
 const params = new URLSearchParams(window.location.search);
 const chIds = params.get('list'), idList = chIds.split(",").map(Number);
 const bond = params.get('bond'), bondList = bond == null ? [5, 5, 5, 5, 5] : bond.split(",").map(Number);
+const starList = params.get('star') == null ? [5, 5, 5, 5, 5] : params.get('star').split(",").map(Number);
+const disciplineList = params.get('discipline') == null ? [3, 3, 3, 3, 3] : params.get('discipline').split(",").map(Number);
+const potentialList = params.get('potential') == null ? [12, 12, 12, 12, 12] : params.get('potential').split(",").map(Number);
+const potentialSubList = Array.from(Array(5), () => Array(6).fill(false));
 const curHeader = 6;
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -24,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function() {
    }
    setComp();
 });
-function refresh() {location.reload();}
+function refresh() {setComp();}
 function setComp() {
    if (idList.length != 5) return alert("캐릭터의 수가 5개가 아닙니다");
    for(const id of idList) {
@@ -45,6 +49,12 @@ function makeComp(list) {
       const ch = getCharacter(id);
       stringArr.push(`
          <div style="display:flex; flex-direction:column; align-items:center">
+            <img src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' onload='fillOptions(${idx});this.parentNode.removeChild(this);'>
+            <select id="bond${idx}" class="select" onchange="changeStatus()"></select>
+            <select id="star${idx}" class="select" onchange="changeStatus()"></select>
+            <select id="discipline${idx}" class="select" onchange="changeStatus()"></select>
+            <select id="potential${idx}" class="select" onchange="changeStatus()"></select>
+            <div id="potentialSub${idx}" class="text-mini" style="margin:0.2rem;"></div>
             <img id="ult${idx}" class="act_btn" onclick="do_ult(${idx})" src="${address}/images/icons/btn_up.png">
             <div id="cd-max${idx}" class="cd-container"><div id="cd${idx}" class="cd"></div></div>
             <div class="character" style="margin:0.2rem;">
@@ -68,6 +78,63 @@ function makeComp(list) {
       idx++;
    }
    compDiv.innerHTML = stringArr.join("");
+}
+
+function fillOptions(idx) {
+   const bondSelect = document.getElementById(`bond${idx}`);
+   for (let i = 1; i <= 5; i++) {
+      const option = document.createElement("option");
+      option.text = numToBond(i);
+      option.value = i;
+      if (i == bondList[idx]) option.selected = true;
+      bondSelect.add(option);
+   }
+   const starSelect = document.getElementById(`star${idx}`);
+   for (let i = comp[idx].rarity; i <= 5; i++) {
+      const option = document.createElement("option");
+      option.text = `★`.repeat(i);
+      option.value = i;
+      if (i == starList[idx]) option.selected = true;
+      starSelect.add(option);
+   }
+   const disciplineSelect = document.getElementById(`discipline${idx}`);
+   for (let i = 0; i <= 5; i++) {
+      const option = document.createElement("option");
+      option.text = i;
+      option.value = i;
+      if (i == disciplineList[idx]) option.selected = true;
+      disciplineSelect.add(option);
+   }
+   const potentialSelect = document.getElementById(`potential${idx}`);
+   for (let i = 1; i <= 12; i++) {
+      const option = document.createElement("option");
+      option.text = i;
+      option.value = i;
+      if (i == potentialList[idx]) option.selected = true;
+      potentialSelect.add(option);
+   }
+   const potentialSubDiv = getdiv(`potentialSub${idx}`);
+   for (let i = 0; i < 6; i++) {
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.id = `potentialSub${idx}-${i}`;
+      check.checked = potentialSubList[idx][i];
+      check.onchange = changeStatus;
+      potentialSubDiv.appendChild(check);
+   }
+}
+
+function changeStatus(event) {
+   for(let i = 0; i < 5; i++) {
+      bondList[i] = Number(document.getElementById(`bond${i}`).value);
+      starList[i] = Number(document.getElementById(`star${i}`).value);
+      disciplineList[i] = Number(document.getElementById(`discipline${i}`).value);
+      potentialList[i] = Number(document.getElementById(`potential${i}`).value);
+      for (let j = 0; j < 6; j++) {
+         potentialSubList[i][j] = document.getElementById(`potentialSub${i}-${j}`).checked;
+      }
+   }
+   setComp();
 }
 
 function numToBond(num) {
@@ -98,6 +165,11 @@ function start(compIds) {
          comp.push(new Champ(tmp.id, tmp.name, Math.ceil(tmp.hp*COEF), Math.ceil(tmp.atk*COEF*1.1), tmp.cd, tmp.element, tmp.role, tmp.atkMag, tmp.ultMag));
       else
          comp.push(new Champ(tmp.id, tmp.name, Math.ceil(tmp.hp*COEF), Math.ceil(tmp.atk*COEF), tmp.cd, tmp.element, tmp.role, tmp.atkMag, tmp.ultMag));
+      const ch = comp.at(-1);
+      ch.initHP = tmp.hp;
+      ch.initATK = ch.atk;
+      ch.rarity = tmp.rarity;
+      ch.potentialType = tmp.potential;
    }
    comp[0].isLeader = true;
    for(let i = 0; i < 5; i++) {
@@ -107,6 +179,8 @@ function start(compIds) {
       }
       comp[i] = setDefault(comp[i], bondList[i]);
       if (comp[i] == undefined || comp[i] == null) return alert("캐릭터 세팅에 문제가 발생");
+      adjust_stat(comp[i], bondList[i], starList[i], disciplineList[i], potentialList[i], potentialSubList[i]);
+      // console.log(comp[i].name, comp[i].hp, comp[i].atk);
    }
    comp[0].leader();
    for(let i = 0; i < 5; i++) comp[i].passive();
@@ -114,6 +188,22 @@ function start(compIds) {
 
    savedData.length = 0;
    updateAll();
+}
+
+function adjust_stat(champ, bond, star, discipline, potential, potentialSub) {
+   const stats = calcCharStats({
+      level: 1,
+      potential: potential,
+      potentialSub: potentialSub,
+      potentialType: champ.potentialType,
+      discipline: discipline,
+      star: star,
+      rarity: champ.rarity,
+      initHP: champ.initHP,
+      initATK: champ.initATK
+   });
+   champ.hp = stats.HP;
+   champ.atk = stats.ATK;
 }
 
 function do_ult(idx) {
