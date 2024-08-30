@@ -1,10 +1,13 @@
 const params = new URLSearchParams(window.location.search);
 const chIds = params.get('list'), idList = chIds.split(",").map(Number);
 const bond = params.get('bond'), bondList = bond == null ? [5, 5, 5, 5, 5] : bond.split(",").map(Number);
-const starList = params.get('star') == null ? [5, 5, 5, 5, 5] : params.get('star').split(",").map(Number);
-const disciplineList = params.get('discipline') == null ? [3, 3, 3, 3, 3] : params.get('discipline').split(",").map(Number);
-const potentialList = params.get('potential') == null ? [12, 12, 12, 12, 12] : params.get('potential').split(",").map(Number);
-const potentialSubList = Array.from(Array(5), () => Array(6).fill(false));
+const stats = {
+   bond: bondList,
+   star: params.get('star') == null ? [5, 5, 5, 5, 5] : params.get('star').split(",").map(Number),
+   discipline: params.get('discipline') == null ? [3, 3, 3, 3, 3] : params.get('discipline').split(",").map(Number),
+   potential: params.get('potential') == null ? [12, 12, 12, 12, 12] : params.get('potential').split(",").map(Number),
+   potentialSub: Array.from(Array(5), () => Array(6).fill(false)),
+}
 const curHeader = 6;
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -43,18 +46,25 @@ function setComp() {
 
 function makeComp(list) {
    const compDiv = document.getElementById('comp');
-   const stringArr = [];
+   const stringArr = [`
+      <div id="statIcons" style="display:flex; flex-direction:column; align-items:center">
+         <img src="https://ajar0.github.io/tkfmtools/static/27273499d80483be05147e5856b8285e/15e42/ui_bond_1.png">
+         <img src="https://ajar0.github.io/tkfmtools/static/19f4d271274c20e759c78465c7be7a6a/1e010/ui_star_ssr.png">
+         <img src="https://ajar0.github.io/tkfmtools/static/db6c3163490906fe13dc690e1aab5f41/1f8a1/ui_discipline.png">
+         <img src="https://ajar0.github.io/tkfmtools/static/03e524de84d9439b17a5fbbd56c7b52c/7458e/ui_potentialPassive.png">
+      </div>
+   `];
    let idx = 0, i = 0;
    for(const id of list) {
       const ch = getCharacter(id);
       stringArr.push(`
          <div style="display:flex; flex-direction:column; align-items:center">
             <img src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' onload='fillOptions(${idx});this.parentNode.removeChild(this);'>
-            <select id="bond${idx}" class="select" onchange="changeStatus()"></select>
-            <select id="star${idx}" class="select" onchange="changeStatus()"></select>
-            <select id="discipline${idx}" class="select" onchange="changeStatus()"></select>
-            <select id="potential${idx}" class="select" onchange="changeStatus()"></select>
-            <div id="potentialSub${idx}" class="text-mini" style="margin:0.2rem;"></div>
+            <select id="bond-${idx}" onchange="changeStatus(event)"></select>
+            <select id="star-${idx}" onchange="changeStatus(event)"></select>
+            <select id="discipline-${idx}" onchange="changeStatus(event)"></select>
+            <select id="potential-${idx}" onchange="changeStatus(event)"></select>
+            <div id="potentialSub${idx}" class="check-mini"></div>
             <img id="ult${idx}" class="act_btn" onclick="do_ult(${idx})" src="${address}/images/icons/btn_up.png">
             <div id="cd-max${idx}" class="cd-container"><div id="cd${idx}" class="cd"></div></div>
             <div class="character" style="margin:0.2rem;">
@@ -81,59 +91,42 @@ function makeComp(list) {
 }
 
 function fillOptions(idx) {
-   const bondSelect = document.getElementById(`bond${idx}`);
-   for (let i = 1; i <= 5; i++) {
-      const option = document.createElement("option");
-      option.text = numToBond(i);
-      option.value = i;
-      if (i == bondList[idx]) option.selected = true;
-      bondSelect.add(option);
-   }
-   const starSelect = document.getElementById(`star${idx}`);
-   for (let i = comp[idx].rarity; i <= 5; i++) {
-      const option = document.createElement("option");
-      option.text = `★`.repeat(i);
-      option.value = i;
-      if (i == starList[idx]) option.selected = true;
-      starSelect.add(option);
-   }
-   const disciplineSelect = document.getElementById(`discipline${idx}`);
-   for (let i = 0; i <= 5; i++) {
-      const option = document.createElement("option");
-      option.text = i;
-      option.value = i;
-      if (i == disciplineList[idx]) option.selected = true;
-      disciplineSelect.add(option);
-   }
-   const potentialSelect = document.getElementById(`potential${idx}`);
-   for (let i = 1; i <= 12; i++) {
-      const option = document.createElement("option");
-      option.text = i;
-      option.value = i;
-      if (i == potentialList[idx]) option.selected = true;
-      potentialSelect.add(option);
-   }
+   const matrix = [
+      ['bond', 1, 5],
+      ['star', 1, 5],
+      ['discipline', 0, 5],
+      ['potential', 1, 12],
+   ].map(args => {
+      const [statType, start, end] = args;
+      const sel = document.getElementById(`${statType}-${idx}`);
+      for (let i = start; i <= end; i++) {
+         const option = document.createElement("option");
+         option.text = i;
+         option.value = i;
+         option.selected = stats[statType][idx] == i;
+         sel.add(option);
+      }
+   })
    const potentialSubDiv = getdiv(`potentialSub${idx}`);
    for (let i = 0; i < 6; i++) {
       const check = document.createElement("input");
       check.type = "checkbox";
-      check.id = `potentialSub${idx}-${i}`;
-      check.checked = potentialSubList[idx][i];
-      check.onchange = changeStatus;
+      check.id = `potentialSub-${idx}-${i}`;
+      check.checked = stats.potentialSub[idx][i];
+      check.onchange = changePotentialSub;
       potentialSubDiv.appendChild(check);
    }
 }
 
 function changeStatus(event) {
-   for(let i = 0; i < 5; i++) {
-      bondList[i] = Number(document.getElementById(`bond${i}`).value);
-      starList[i] = Number(document.getElementById(`star${i}`).value);
-      disciplineList[i] = Number(document.getElementById(`discipline${i}`).value);
-      potentialList[i] = Number(document.getElementById(`potential${i}`).value);
-      for (let j = 0; j < 6; j++) {
-         potentialSubList[i][j] = document.getElementById(`potentialSub${i}-${j}`).checked;
-      }
-   }
+   const [statType, i] = event.target.id.split("-");
+   stats[statType][i] = Number(event.target.value);
+   setComp();
+}
+
+function changePotentialSub(event) {
+   const [_, i, j] = event.target.id.split("-");
+   stats.potentialSub[i][j] = event.target.checked;
    setComp();
 }
 
@@ -179,8 +172,7 @@ function start(compIds) {
       }
       comp[i] = setDefault(comp[i], bondList[i]);
       if (comp[i] == undefined || comp[i] == null) return alert("캐릭터 세팅에 문제가 발생");
-      adjust_stat(comp[i], bondList[i], starList[i], disciplineList[i], potentialList[i], potentialSubList[i]);
-      // console.log(comp[i].name, comp[i].hp, comp[i].atk);
+      adjust_stat(comp[i], bondList[i], stats.star[i], stats.discipline[i], stats.potential[i], stats.potentialSub[i]);
    }
    comp[0].leader();
    for(let i = 0; i < 5; i++) comp[i].passive();
