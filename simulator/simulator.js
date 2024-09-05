@@ -66,7 +66,7 @@ function makeComp(list) {
                   <div id="el${idx}" class="element${ch.element} ch_border z-4"></div>
                </div>
                <div id="cd-max${idx}" class="shd-container"><div id="shd${idx}" class="shd"></div></div>
-               <div class="text-mini">${ch.name}</div>
+               <div class="text-mini">${t(ch.name)}</div>
             </div>
             <img id="def${idx}" class="act_btn" onclick="do_def(${idx})" src="${address}/images/icons/btn_down.png">
             <div class="act_btn" style="height:2.5rem;">
@@ -245,6 +245,7 @@ function endAct() {
          GLOBAL_TURN--;
          return endGame();
       }
+      if (GLOBAL_TURN == 14 && isValidComp(idList) && bondList.every(e => e == 1)) saveBond1();
       for(let i = 0; i < 5; i++) comp[i].turnstart();
    }
 }
@@ -254,10 +255,10 @@ function endGame() {
    updateAll();
 
    const msg = [];
-   msg.push(`${comp[0].name} ${comp[1].name} ${comp[2].name} ${comp[3].name} ${comp[4].name}`);
-   msg.push(`${t("구속")} : ${bondList[0]} ${bondList[1]} ${bondList[2]} ${bondList[3]} ${bondList[4]} `)
+   msg.push(`${t(comp[0].name).replace(" <br>\u200B","")}, ${t(comp[1].name).replace(" <br>\u200B","")}, ${t(comp[2].name).replace(" <br>\u200B","")}, ${t(comp[3].name).replace(" <br>\u200B","")}, ${t(comp[4].name).replace(" <br>\u200B","")}`);
+   msg.push(`${t("구속")} : ${bondList[0]}, ${bondList[1]}, ${bondList[2]}, ${bondList[3]}, ${bondList[4]}`);
    msg.push(`${t("허수턴")} : ${scarecrowTurn}`);
-   msg.push(`${t("13턴딜")} : ${dmg13.toLocaleString()}`)
+   msg.push(`${t("13턴딜")} : ${dmg13.toLocaleString()}`);
 
    const cmd = [];
    for(let i = 0; i < command.length; i++) {
@@ -271,24 +272,39 @@ function endGame() {
    const command_tmp = cmd.join("");
    console.log(command_tmp);
    
-   if (isValidComp(idList) && bondList.every(e => e == 5)) {
-      const formData = new FormData();
-      formData.append("name", `${comp[0].name}덱`);
-      formData.append("compstr", chIds);
-      formData.append("dmg13", dmg13);
-      formData.append("scarecrow", scarecrowTurn);
-      formData.append("command", command_tmp);
-      request(`${server}/comps/setPower`, {
-         method: "POST",
-         body: formData
-      }).then(response => {
-         if (!response.ok) throw new Error('네트워크 응답이 올바르지 않습니다.');
-         return response.json();
-      }).then(res => {}).catch(e => {})
-   }
+   if (isValidComp(idList) && bondList.every(e => e == 5)) saveBond5(command_tmp);
    
    savedData.length = 0;
    alert(msg.join("\n"));
+}
+
+function saveBond1() {
+   const formData = new FormData();
+   formData.append("name", `${comp[0].name}덱`);
+   formData.append("compstr", chIds);
+   formData.append("dmg13", dmg13);
+   request(`${server}/comps/setPower1`, {
+      method: "POST",
+      body: formData
+   }).then(response => {
+      if (!response.ok) throw new Error('네트워크 응답이 올바르지 않습니다.');
+      return response.json();
+   }).then(res => {}).catch(e => {})
+}
+function saveBond5(command_tmp) {
+   const formData = new FormData();
+   formData.append("name", `${comp[0].name}덱`);
+   formData.append("compstr", chIds);
+   formData.append("dmg13", dmg13);
+   formData.append("scarecrow", scarecrowTurn);
+   formData.append("command", command_tmp);
+   request(`${server}/comps/setPower`, {
+      method: "POST",
+      body: formData
+   }).then(response => {
+      if (!response.ok) throw new Error('네트워크 응답이 올바르지 않습니다.');
+      return response.json();
+   }).then(res => {}).catch(e => {})
 }
 
 function isAllActed() {

@@ -220,15 +220,20 @@ function makeSSRBlock(list) {
             <div class="character">   
                <div style="margin:0.2rem;">
                   <img id="img_${ch.id}" src="${address}/images/characters/cs${ch.id}_0_0.webp" class="img z-1" alt="">
-                  <div class="text-mini" style="text-align:center;">${ch.name}</div>
+                  <div class="text-mini" style="text-align:center;">${t(ch.name)}</div>
                </div>
             </div>
             <div style="width:3rem;">${Math.floor(ch.per*100)}%</div>
-            <div style="width:12rem;">리더 ${ch.cur}</div>
+            <div style="width:12rem;">${t("리더")} ${getTranslatedTags(ch.cur)}</div>
          </div>
       `)
    }
    box.innerHTML = str.join("");
+}
+function getTranslatedTags(str) {
+   const tg = str.split(" ");
+   for(let i = 0; i < tg.length; i++) tg[i] = t(tg[i]);
+   return tg.join(" ");
 }
 
 function makeSRBlock(list) {
@@ -236,13 +241,13 @@ function makeSRBlock(list) {
    if (list.length == 0) {box.innerHTML = ""; return;}
    
    const str = [];
-   str.push(`<p style="font-weight:bold;">&nbsp;태그조합당 SR 비율</p>`)
+   str.push(`<p style="font-weight:bold;">&nbsp;${t("태그조합당 SR 비율")}</p>`)
    for(const ch of list) {
       if (ch.per == 0) continue;
       str.push(`
          <div style="margin:0.5rem; display:flex; flex-wrap:wrap; justify-content: space-around">
             <div width:"3rem;">${Math.floor(ch.per*100)}%</div>
-            <div style="width:14rem;">${ch.cur}</div>
+            <div style="width:14rem;">${getTranslatedTags(ch.cur)}</div>
          </div>
       `)
    }

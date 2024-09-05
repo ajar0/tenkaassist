@@ -72,7 +72,7 @@ function getCharactersWithCondition(element, role, rarity, search) {
                <img id="chk_${id}" src="${address}/images/checkmark.png" class="chked z-3" style="display:${chk_option}">
                <div class="element${element} ch_img ch_border z-4"></div>
             </div>
-            <div class="text-mini">${name}</div>
+            <div class="text-mini">${t(name)}</div>
          </div>
       `);
    }
@@ -113,7 +113,7 @@ function updateSelected() {
                   ${liberationList.includes(name) ? `<img src="${address}/images/icons/liberation.webp" class="li-icon z-2">` : ""}
                   <div class="element${element} ch_img ch_border z-4"></div>
                </div>
-               <div class="text-mini">${name}</div>
+               <div class="text-mini">${t(name)}</div>
             </div>
          `);
       }
@@ -155,6 +155,24 @@ function clickedSel(div, id) {
       if (chk != null) chk.style.display = "none";
    }
    updateSelected()
+}
+
+function setBond(num) {
+   // 구속 드랍박스
+   for(let i = 0; i < 5; i++) {
+      const dropdownBtn = document.getElementById(`btn${i}`);
+      const dropdownContent = document.getElementById(`drop${i}`);
+      const radios = document.querySelectorAll(`.dropdown-content input[name='b${i}']`);
+      radios.forEach(function(option) {
+         if (option.value == num) option.checked = true;
+      });
+      dropdownBtn.innerText = "1";
+      const spanElement = document.createElement('span');
+      spanElement.classList.add('absolute-right');
+      spanElement.innerHTML = '▼'
+      dropdownBtn.appendChild(spanElement);
+      dropdownContent.style.display = "none";
+   }
 }
 
 

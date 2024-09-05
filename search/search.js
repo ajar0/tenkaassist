@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
    var options = document.querySelectorAll(".dropdown-content input[type='radio']");
    options.forEach(function(option) {
       option.addEventListener("change", function() {
-         dropdownBtn.innerText = `${this.value}`;
+         dropdownBtn.innerText = `${t(this.value)}`;
          const spanElement = document.createElement('span');
          spanElement.classList.add('absolute-right');
          spanElement.innerHTML = '▼'
@@ -23,9 +23,10 @@ document.addEventListener("DOMContentLoaded", function() {
          dropdownContent.style.display = "none";
 
          isEnd = false; cnt = 0; sort = 0; page = 0;
-         if ("13턴딜" === this.value) sort = 1;
+         if ("13턴딜(5)" === this.value) sort = 1;
          if ("최신등록순" === this.value) sort = 2;
          if ("최신수정순" === this.value) sort = 3;
+         if ("13턴딜(1)" === this.value) sort = 4;
          getComps(sort);
       });
    });
@@ -56,18 +57,18 @@ function getComps(sort) {
    request(url, {
       method: "GET",
    }).then(response => {
-      if (!response.ok) throw new Error('네트워크 응답이 올바르지 않습니다.');
+      if (!response.ok) throw new Error(t('네트워크 응답이 올바르지 않습니다.'));
       return response.json();
    }).then(res => {
       if (!res.success) {
-         document.getElementById("cnt-all").innerHTML = `검색결과 : 0개`;
+         document.getElementById("cnt-all").innerHTML = `${t("검색된 덱")} : 0`;
          return console.log(res.msg);
       }
       curData = res.data;
-      document.getElementById("cnt-all").innerHTML = `검색결과 : ${curData.length}개`;
+      document.getElementById("cnt-all").innerHTML = `${t("검색된 덱")} : ${curData.length}`;
       makeBlock(sort);
    }).catch(e => {
-      console.log("데이터 로드 실패", e);
+      console.log(t("데이터 로드 실패"), e);
    })
 }
 
@@ -79,15 +80,14 @@ function makeBlock(sort) {
       const stringArr = [];
       cnt++;
       const id = comp.id, name = comp.name, compstr = comp.compstr;
-      const ranking = comp.ranking, recommend = comp.recommend;
-      const creator = comp.creator, updater = comp.updater;
+      const ranking = comp.ranking, recommend = comp.recommend, vote = comp.vote;
       const create_at = comp.create_at == null ? '-' : addNineHours(comp.create_at);
       const update_at = comp.update_at == null ? '-' : addNineHours(comp.update_at);
       stringArr.push(`<div class="comp-box">`);
       if (sort == 2) stringArr.push(`<div class="comp-time">${create_at}</div>`);
       else if (sort == 3) stringArr.push(`<div class="comp-time">${update_at}</div>`);
       else stringArr.push(`<div class="comp-order">#${cnt}</div>`)
-      stringArr.push(`<div class="comp-name">${name}</div><div class="comp-deck">`);
+      stringArr.push(`<div class="comp-name">${t_d(name)}</div><div class="comp-deck">`);
 
       for(const cid of compstr.split(" ").map(Number)) {
          const ch = getCharacter(cid);
@@ -99,16 +99,17 @@ function makeBlock(sort) {
                   ${liberationList.includes(ch.name) ? `<img src="${address}/images/icons/liberation.webp" class="li-icon z-2">` : ""}
                   <div class="element${ch.element} ch_border z-4"></div>
                </div>
-               <div class="text-mini">${ch.name}</div>
+               <div class="text-mini">${t(ch.name)}</div>
             </div>
          `);       
       }
       let last;
       switch(sort) {
          case 1 : last = `<i class="fa-solid fa-burst"></i> ${formatNumber(recommend)}`; break;
-         case 2 : last = `${creator}`; break;
-         case 3 : last = `${updater}`; break;
-         default : last = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)}턴`;
+         case 2 : last = `${rankOrBond1(ranking, vote)}`; break;
+         case 3 : last = `${rankOrBond1(ranking, vote)}`; break;
+         case 4 : last = `<i class="fa-solid fa-burst"></i> ${formatNumber(vote)}`; break;
+         default : last = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)}${t("턴")}`;
       } stringArr.push(`</div><div class="comp-rank">${last}</div></div>`);
       let compcontainer = document.getElementById('compcontainer');
       let compblock = document.createElement('div');
@@ -120,9 +121,14 @@ function makeBlock(sort) {
       compcontainer.appendChild(compblock);
    }
    if (cnt == 0) document.getElementById('compcontainer').innerHTML = `
-      <div class="block">검색결과 없음</div>
+      <div class="block">${t("검색결과 없음")}</div>
    `;
    page++;
+}
+
+function rankOrBond1(ranking, dmg13_1) {
+   if (ranking < 99 || dmg13_1 == 0) return `<i class="fa-solid fa-skull"></i> `+ranking.toFixed(0)+t("턴");
+   return `<i class="fa-solid fa-burst"></i> `+formatNumber(dmg13_1)+" (1)";
 }
 
 function init() {

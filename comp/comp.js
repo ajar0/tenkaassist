@@ -36,14 +36,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function makeCompBlock(comp) {
    const id = comp.id, name = comp.name, compstr = comp.compstr;
-   const description = comp.description, ranking = comp.ranking;
+   const description = comp.description, ranking = comp.ranking, vote = comp.vote;
    const recommend = comp.recommend, creator = comp.creator, updater = comp.updater;
    const create_at = comp.create_at == null ? '-' : addNineHours(comp.create_at);
    const update_at = comp.update_at == null ? '-' : addNineHours(comp.update_at);
    
    curRecommend = recommend;
-   document.title = `TenkaAssist - ${name}`
-   document.getElementById('titlebox').innerHTML = `${name}`;
+   document.title = `TenkaAssist - ${t_d(name)}`
+   document.getElementById('titlebox').innerHTML = `${t_d(name)}`;
    const compbox = document.getElementById('comp-box-in');
    const stringArr = [];
    for(const cid of compstr.split(" ").map(Number)) {
@@ -57,7 +57,7 @@ function makeCompBlock(comp) {
                ${liberationList.includes(ch.name) ? `<img src="${address}/images/icons/liberation.webp" class="li-icon z-2">` : ""}
                <div class="element${ch.element} ch_border z-4"></div>
             </div>
-            <div class="text-mini">${ch.name}</div>
+            <div class="text-mini">${t(ch.name)}</div>
          </div>
       `);
    }
@@ -66,7 +66,8 @@ function makeCompBlock(comp) {
    document.getElementById('update_at').innerHTML = `${t("수정 : ")}${update_at == null ? " - " : update_at} ${updater}`;
 
    document.getElementById('scarecrow').innerHTML = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)}${t("턴")}`;
-   document.getElementById('dmg13').innerHTML = `<i class="fa-solid fa-burst"></i> ${formatNumber(recommend)}`;
+   document.getElementById('dmg13').innerHTML = `<i class="fa-solid fa-burst"></i> ${formatNumber(recommend)} (5)`;
+   document.getElementById('dmg13-1').innerHTML = `<i class="fa-solid fa-burst"></i> ${formatNumber(vote)} (1)`;
 
    document.getElementById('description').innerHTML = setCommand(description).trim();
 }
