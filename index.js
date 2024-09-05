@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
    radios.forEach(function(option) {
       option.addEventListener("change", function() {
          document.getElementById('compcontainer').innerHTML = "";
-         dropdownBtn.innerText = `${this.value}`;
+         dropdownBtn.innerText = `${t(this.value)}`;
          const spanElement = document.createElement('span');
          spanElement.classList.add('absolute-right');
          spanElement.innerHTML = '▼'
@@ -24,11 +24,12 @@ document.addEventListener("DOMContentLoaded", function() {
          dropdownContent.style.display = "none";
 
          sort = 0;
-         document.getElementById('nextTrigger').innerHTML = "로드 중...";
-         document.getElementById('titleboxText').innerHTML = `조합 - ${this.value}`;
-         if ("13턴딜" === this.value) sort = 1;
+         document.getElementById('nextTrigger').innerHTML = t("로드 중...");
+         document.getElementById('titleboxText').innerHTML = `${t("조합")} - ${t(this.value)}`;
+         if ("13턴딜(5)" === this.value) sort = 1;
          if ("최신등록순" === this.value) sort = 2;
          if ("최신수정순" === this.value) sort = 3;
+         if ("13턴딜(1)" === this.value) sort = 4;
          
          page = 0; cnt = 1; isLoading = true;
          getComps(page++);
@@ -52,22 +53,22 @@ function getComps(page) {
    request(`${server}/comps/all/${sort}/${page}`, {
       method: "GET",
    }).then(response => {
-      if (!response.ok) throw new Error('네트워크 응답이 올바르지 않습니다.');
+      if (!response.ok) throw new Error(t('네트워크 응답이 올바르지 않습니다.'));
       return response.json();
    }).then(res => {
       isLoading = false;
       if (!res.success) {
          isLoading = true;
          document.getElementById('nextTrigger').innerHTML = `${res.msg}`;
-         return console.log("데이터 로드 실패");
+         return console.log(t("데이터 로드 실패"));
       }
       makeBlock(res.data.content, sort);
       isLoading = false;
-      document.getElementById('nextTrigger').innerHTML = `더이상 조합이 없습니다`;
+      document.getElementById('nextTrigger').innerHTML = t(`더이상 조합이 없습니다`);
    }).catch(e => {
       isLoading = false;
-      console.log("데이터 로드 실패", e);
-      document.getElementById('nextTrigger').innerHTML = "데이터 로드 실패";
+      console.log(t("데이터 로드 실패"), e);
+      document.getElementById('nextTrigger').innerHTML = t("데이터 로드 실패");
    })
 }
 
@@ -75,16 +76,16 @@ function makeBlock(data, sort) {
    for(const comp of data) {
       const stringArr = [];
       const id = comp.id, name = comp.name, compstr = comp.compstr;
-      const ranking = comp.ranking, recommend = comp.recommend;
-      const creator = comp.creator, updater = comp.updater;
+      const ranking = comp.ranking, recommend = comp.recommend, vote = comp.vote;
       const create_at = comp.create_at == null ? '-' : addNineHours(comp.create_at);
       const update_at = comp.update_at == null ? '-' : addNineHours(comp.update_at);
       stringArr.push(`<div class="comp-box">`);
 
       if (sort == 2) stringArr.push(`<div class="comp-time">${create_at}</div>`);
       else if (sort == 3) stringArr.push(`<div class="comp-time">${update_at}</div>`);
-      else stringArr.push(`<div class="comp-order">#${cnt++}</div>`)
-      stringArr.push(`<div class="comp-name">${name}</div><div class="comp-deck">`);
+      else if (sort == 4) stringArr.push(`<div class="comp-order">#${cnt++}</div>`);
+      else stringArr.push(`<div class="comp-order">#${cnt++}</div>`);
+      stringArr.push(`<div class="comp-name">${t_d(name)}</div><div class="comp-deck">`);
 
       for(const cid of compstr.split(" ").map(Number)) {
          const ch = getCharacter(cid);
@@ -96,16 +97,17 @@ function makeBlock(data, sort) {
                   ${liberationList.includes(ch.name) ? `<img src="${address}/images/icons/liberation.webp" class="li-icon z-2">` : ""}
                   <div class="element${ch.element} ch_border z-4"></div>
                </div>
-               <div class="text-mini">${ch.name}</div>
+               <div class="text-mini">${t(ch.name)}</div>
             </div>
          `);       
       }
       let last;
       switch(sort) {
          case 1 : last = `<i class="fa-solid fa-burst"></i> ${formatNumber(recommend)}`; break;
-         case 2 : last = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)}턴`; break;
-         case 3 : last = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)}턴`; break;
-         default : last = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)}턴`;
+         case 2 : last = `${rankOrBond1(ranking, vote)}`; break;
+         case 3 : last = `${rankOrBond1(ranking, vote)}`; break;
+         case 4 : last = `<i class="fa-solid fa-burst"></i> ${formatNumber(vote)}`; break;
+         default : last = `<i class="fa-solid fa-skull"></i> ${ranking.toFixed(0)+t("턴")}`;
       } stringArr.push(`</div><div class="comp-rank">${last}</div></div>`);
 
       let compcontainer = document.getElementById('compcontainer');
@@ -117,6 +119,11 @@ function makeBlock(data, sort) {
       });
       compcontainer.appendChild(compblock);
    }
+}
+
+function rankOrBond1(ranking, dmg13_1) {
+   if (ranking < 99 || dmg13_1 == 0) return `<i class="fa-solid fa-skull"></i> `+ ranking.toFixed(0)+t("턴");
+   return `<i class="fa-solid fa-burst"></i> `+formatNumber(dmg13_1)+"(1)";
 }
 
 function init() {
@@ -131,12 +138,12 @@ function loadAllCompCnt() {
    request(`${server}/comps/getCnt`, {
       method: "GET",
    }).then(response => {
-      if (!response.ok) throw new Error('네트워크 응답이 올바르지 않습니다.');
+      if (!response.ok) throw new Error(t('네트워크 응답이 올바르지 않습니다.'));
       return response.json();
    }).then(res => {
-      if (!res.success) return console.log("덱개수 로드 실패");
-      document.getElementById("cnt-all").innerHTML = `총 덱 개수 : ${res.data}개`;
+      if (!res.success) return console.log(t("덱개수 로드 실패"));
+      document.getElementById("cnt-all").innerHTML = `${t("총 덱 개수")} : ${res.data}`;
    }).catch(e => {
-      console.log("덱개수 로드 실패", e);
+      console.log(t("덱개수 로드 실패"), e);
    })
 }

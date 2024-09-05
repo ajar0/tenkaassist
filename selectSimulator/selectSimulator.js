@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function getCharactersWithCondition(element, role, rarity, search) {
    const characterContainer = document.getElementById("characterContainer");
-   characterContainer.innerHTML = "로드 중...";
+   characterContainer.innerHTML = t("로드 중...");
 
    search = fixName(search);
    const dataArray = chJsonList;
@@ -72,7 +72,7 @@ function getCharactersWithCondition(element, role, rarity, search) {
                <img id="chk_${id}" src="${address}/images/checkmark.png" class="chked z-3" style="display:${chk_option}">
                <div class="element${element} ch_img ch_border z-4"></div>
             </div>
-            <div class="text-mini">${name}</div>
+            <div class="text-mini">${t(name)}</div>
          </div>
       `);
    }
@@ -91,14 +91,14 @@ function getBondList() {
 
 // 시작 버튼 누를시
 function startSimulator() {
-   if (selected.length != 5) return alert("5개의 캐릭터를 선택해주세요");
+   if (selected.length != 5) return alert(t("5개의 캐릭터를 선택해주세요"));
    location.href = `${address}/simulator/?list=${selected}&bond=${getBondList()}`
 }
 
 // 검색창에 선택된 캐릭터 이미지 띄우기
 function updateSelected() {
    const div = document.getElementById("selectedCh");
-   if (selected.length == 0) div.innerHTML = "캐릭터를 선택해 추가해 주세요";
+   if (selected.length == 0) div.innerHTML = t("캐릭터를 선택해 추가해 주세요");
    else {
       let innerArray = [];
       for(let chId of selected) {
@@ -113,7 +113,7 @@ function updateSelected() {
                   ${liberationList.includes(name) ? `<img src="${address}/images/icons/liberation.webp" class="li-icon z-2">` : ""}
                   <div class="element${element} ch_img ch_border z-4"></div>
                </div>
-               <div class="text-mini">${name}</div>
+               <div class="text-mini">${t(name)}</div>
             </div>
          `);
       }
@@ -123,8 +123,8 @@ function updateSelected() {
 
 // 클릭하면 체크표시 활성/비활성화, 리스트에 추가/제거
 function clickedCh(id) {
-   if (selected.length > 4 && !selected.includes(id)) return alert("5개까지 선택 가능합니다");
-   if (selected.length > 4 && isAny(id)) return alert("5개까지 선택 가능합니다");
+   if (selected.length > 4 && !selected.includes(id)) return alert(t("5개까지 선택 가능합니다"));
+   if (selected.length > 4 && isAny(id)) return alert(t("5개까지 선택 가능합니다"));
 
    if (isAny(id)) selected.push(id);
    else {
@@ -155,6 +155,24 @@ function clickedSel(div, id) {
       if (chk != null) chk.style.display = "none";
    }
    updateSelected()
+}
+
+function setBond(num) {
+   // 구속 드랍박스
+   for(let i = 0; i < 5; i++) {
+      const dropdownBtn = document.getElementById(`btn${i}`);
+      const dropdownContent = document.getElementById(`drop${i}`);
+      const radios = document.querySelectorAll(`.dropdown-content input[name='b${i}']`);
+      radios.forEach(function(option) {
+         if (option.value == num) option.checked = true;
+      });
+      dropdownBtn.innerText = "1";
+      const spanElement = document.createElement('span');
+      spanElement.classList.add('absolute-right');
+      spanElement.innerHTML = '▼'
+      dropdownBtn.appendChild(spanElement);
+      dropdownContent.style.display = "none";
+   }
 }
 
 

@@ -177,7 +177,7 @@ a {color: inherit; text-decoration: none;}
 .align-item-center {align-items: center;}
 .comp-order {width:3rem; font-weight: bold; font-size:1.2rem;}
 .comp-time {width:5rem; font-size:1rem;}
-.comp-name {white-space: nowrap; width:6rem; font-size:1.1rem;}
+.comp-name {word-break: break-word; white-space: normal; width:10rem; font-size:1.1rem;}
 .comp-deck {display:flex; justify-content: space-around;}
 .comp-rank {text-align: center; font-weight: bold; width:5rem; font-size:1rem;}
 .character {
@@ -186,11 +186,19 @@ a {color: inherit; text-decoration: none;}
    flex-direction: column;
    align-items: center;
 }
+/*
 .text-mini {
    font-size: 0.7rem;
    width:2.8rem;
    text-align: center;
    white-space: nowrap;
+   overflow-x: hidden;
+}
+*/
+.text-mini {
+   font-size: 0.7rem;
+   width:2.8rem;
+   text-align: center;
    overflow-x: hidden;
 }
 .titlebox {
@@ -412,6 +420,14 @@ header {
    border-bottom: 2px solid white;
    font-weight: bold;
 }
+.bol::after {
+   content: attr(title);
+   display: block;
+   font-weight: bold;
+   height: 0px;
+   visibility: hidden;
+   overflow-y: hidden;
+}
 .margin-left {
    margin-left: 1rem;
 }
@@ -443,6 +459,7 @@ header {
    width:2.5rem;
    height:2.5rem;
    cursor: pointer;
+   margin-right:1rem;
 }
 .h-toggle {
    display:flex;
@@ -476,6 +493,38 @@ header {
 }
 .h-cur {
    border-bottom: 2px solid white;
+}
+.h-lang {
+   height:2rem;
+   width:auto;
+   color:white;
+   cursor:pointer;
+   margin-top:0.2rem;
+}
+.h-lang:hover {
+   color:rgb(214, 55, 55);
+}
+.h-lang-list {
+   display:none;
+   position:absolute;
+   background-color:#272727;
+   border-radius:0.3rem;
+   border:0.1rem solid white;
+}
+.h-lang-btn {
+   border-radius:0.2rem;
+   padding:0.5rem;
+   font-size:0.9rem;
+   background-color:#272727;
+   cursor:pointer;
+   font-weight:bold;
+}
+.h-lang-btn:hover {
+   background-color: white;
+   color:black;
+}
+.h-lang-on {
+   display: block;
 }
 .characterSearchBtn {
    height:100%;

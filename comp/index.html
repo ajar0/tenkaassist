@@ -4,6 +4,7 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <script src="../js/common.js"></script>
+   <meta name="description" content="tenkaAssist">
    <link rel="stylesheet" href="../css/common.css" type = "text/css">
    <link rel="stylesheet" href="./comp.css" type = "text/css">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -16,7 +17,7 @@
       <div class="block">
          <div class="margin-left titleblock">
             <span id="titlebox" class="titlebox">/</span>
-            <button class="testBtn" onclick="goTest()">체험하기</button>
+            <button id="testBtn" class="testBtn" onclick="goTest()">체험하기</button>
             <button class="reportBtn" onclick="reportComp()">!</button>
             <button id="initDmgBtn" class="initDmgBtn" onclick="initDmg()">초기화</button>
             <button id="deleteBtn" class="deleteBtn" onclick="deleteComp()">삭제</button>
@@ -36,10 +37,11 @@
       <div class="block likeNranking">
          <div id="scarecrow" style="margin:0.5rem;"></div>
          <div id="dmg13" style="margin:0.5rem;"></div>
+         <div id="dmg13-1" style="margin:0.5rem;"></div>
       </div>
       <div class="block">
-         <p class="fs-1_3 margin-left">
-            행동 순서
+         <p id="ch-order" class="fs-1_3 margin-left">
+            행동 순서 (5구속)
          </p><hr>
          <div id="description" style="width:100%; min-height:5rem;">
 
@@ -48,4 +50,10 @@
       </div>
    </div>
 </body>
+<script>
+   document.getElementById("testBtn").innerText = t("체험하기");
+   document.getElementById("initDmgBtn").innerText = t("초기화");
+   document.getElementById("deleteBtn").innerText = t("삭제");
+   document.getElementById("ch-order").innerText = t("행동 순서")+" (bond 5)";
+</script>
 </html>

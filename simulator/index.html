@@ -4,6 +4,7 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>TenkaAssist - 시뮬레이터</title>
+   <meta name="description" content="tenkaAssist">
    <script src="../js/common.js"></script>
    <link rel="stylesheet" href="../css/common.css" type = "text/css">
    <link rel="stylesheet" href="./simulator.css" type = "text/css">
@@ -19,8 +20,10 @@
       <div id="title-sim" class="block">
          <div class="margin-left titleblock">
             <span id="titlebox" class="titlebox">시뮬레이터</span>
-            <button class="button" onclick="refresh()" style="height:2rem; margin-left:1rem;">리셋</button>
+            <button id="resetBtn" class="button" onclick="refresh()" style="height:2rem; margin-left:1rem;">리셋</button>
+            <!--
             <div class="inquiry" onclick="inquiry()">문의</div> 
+            -->
          </div>
       </div>
       <div id="simulator" class="block">
@@ -41,4 +44,9 @@
    </div>
    <div id="console" class="console no-scrollbar" style="display:none" onclick="close_console()"></div>
 </body>
+<script>
+   document.title = "TenkaAssist - " + t("시뮬레이터");
+   document.getElementById("titlebox").innerText = t("시뮬레이터");
+   document.getElementById("resetBtn").innerText = t("리셋");
+</script>
 </html>
