@@ -2,6 +2,7 @@ const params = new URLSearchParams(window.location.search);
 const chIds = params.get('list'), idList = chIds.split(",").map(Number);
 const bond = params.get('bond'), bondList = bond == null ? [5, 5, 5, 5, 5] : bond.split(",").map(Number);
 const curHeader = 6;
+let skipSave = true;
 
 document.addEventListener("DOMContentLoaded", function() {
    getdiv("bossBuffBtn").innerHTML = `
@@ -118,6 +119,7 @@ function start(compIds) {
 
 function do_ult(idx) {
    if (comp[idx].isActed) return;
+   if (comp[idx].curCd > 0) return;
    saveCur();
    command.push(`${idx+1}궁`);
    comp[idx].ultimate();
@@ -154,7 +156,7 @@ function endAct() {
          GLOBAL_TURN--;
          return endGame();
       }
-      if (GLOBAL_TURN == 14 && isValidComp(idList) && bondList.every(e => e == 1)) saveBond1();
+      if (GLOBAL_TURN == 14 && !skipSave && isValidComp(idList) && bondList.every(e => e == 1)) saveBond1();
       for(let i = 0; i < 5; i++) comp[i].turnstart();
    }
 }
@@ -272,6 +274,123 @@ function updateProgressBar(hp, maxhp) {
 function getdiv(id) {return document.getElementById(id);}
 
 function inquiry() {window.open("https://arca.live/b/tenkafumaa/111986385", '_blank');}
+
+function permute(permutation) {
+   var length = permutation.length,
+      result = [permutation.slice()],
+      c = new Array(length).fill(0),
+      i = 1, k, p;
+
+   while (i < length) {
+     if (c[i] < i) {
+      k = i % 2 && c[i];
+      p = permutation[i];
+      permutation[i] = permutation[k];
+      permutation[k] = p;
+      ++c[i];
+      i = 1;
+      result.push(permutation.slice());
+   } else {
+      c[i] = 0;
+      ++i;
+     }
+   }
+   return result.sort().reverse();
+}
+
+function autorun() {
+   function genPermutation() {
+      return permute([0, 1, 2, 3, 4]);
+   }
+
+   const perms = {
+      '1': genPermutation(),
+      'a': genPermutation(),
+      'u': genPermutation(),
+      'n': genPermutation(),
+   }
+
+   function do_act(idx, isSync, ults) {
+      let func = do_ult;
+      if ((isSync && GLOBAL_TURN > 1 && ults < 5) || comp[idx].curCd > 0) {
+         func = do_atk;
+      }
+      func(idx);
+   }
+
+   const isSync = document.getElementById('syncUlt').checked;
+   // const syncs = Array.from(new Set(comp.map(c => c.cd))).length == 1 ? [true] : [false, true];
+   const syncs = [isSync];
+
+   syncs.forEach(isSync => {
+      // setComp();
+      let prevUlts = 0;
+      while (GLOBAL_TURN <= 90) {
+         const ults = comp.filter(c => c.curCd <= 0).length;
+         if (ults == 0 && prevUlts == 5) {
+            // TODO: find same orders from permutations and replace it
+            const cmds = command.slice(5);
+            const cmdMap = {
+               '궁': do_ult,
+               '평': do_atk,
+               '방': do_def,
+            }
+            while (GLOBAL_TURN <= 90) {
+               let i = 0
+               while (i < cmds.length) {
+                  for (j = 0; j < 5; j++) {
+                     cmdMap[cmds[i][1]](cmds[i++][0] - 1);
+                  }
+                  if (boss.hp <= 0) {
+                     return;
+                  }
+               }
+            }
+         }
+         prevUlts = ults;
+         let best = 0;
+         let bestPerm = [];
+         let perm = []
+
+         if (GLOBAL_TURN == 1) {
+            perm = perms['1'];
+         } else {
+            if (isSync) {
+               perm = ults < 5 ? perms['a'] : perms['u'];
+            } else {
+               perm = perms['n'];
+            }
+         }
+         skipSave = true;
+         for (let k = perm.length-1; k >= 0; k--) {
+            let dmg = boss.hp;
+            for (let j = 0; j < perm[k].length; j++) {
+               do_act(perm[k][j], isSync, ults);
+            }
+            if (boss.hp <= 0) {
+               return;
+            }
+            dmg -= boss.hp;
+            if (dmg > best) {
+               if (isSync && best > 0) {
+                  const bestPermIndex = perm.findIndex(p => p.join('') === bestPerm.join(''));
+                  perm.splice(bestPermIndex, 1);
+               }
+               best = dmg;
+               bestPerm = perm[k];
+            } else if (dmg < best && isSync) {
+               perm.splice(k, 1);
+            }
+            comp.forEach(_ => loadBefore());
+            document.getElementById('autorunStatus').innerHTML = `Turn ${GLOBAL_TURN} - ${isSync ? 'Sync' : 'Async'} - ${k}`;
+         }
+         skipSave = false;
+         bestPerm.forEach(i => {
+            do_act(i, isSync, ults);
+         });
+      }
+   })
+}
 
 (function() {
    const isDebuggerEnabled = () => {

@@ -37,7 +37,13 @@
          <div id="deal_dot" style="width:100%; text-align: center;"></div>
          <div id="deal_ref" style="width:100%; text-align: center;"></div>
          <div id="comp" class="comp-sim"></div>
-         <button class="logoutBtn" onclick="loadBefore()">undo</button>
+         <div>
+            <button class="logoutBtn" onclick="loadBefore()">undo</button>
+            <button class="submitBtn" onclick="autorun()">autorun</button>
+            <input type="checkbox" id="syncUlt" checked>
+            <label for="sync">궁턴 통일</label>
+            <div id="autorunStatus"></div>
+         </div>
       </div>
    </div>
    <div id="console" class="console no-scrollbar" style="display:none" onclick="close_console()"></div>
